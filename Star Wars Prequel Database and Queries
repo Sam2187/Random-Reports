@@ -1,0 +1,103 @@
+CREATE TABLE `movies_actors` (
+  `actor_id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `gender` varchar(10) NOT NULL,
+  PRIMARY KEY (`actor_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `movies_directors` (
+  `director_id` int NOT NULL AUTO_INCREMENT,
+  `movie_id` int NOT NULL,
+  `director_name` varchar(50) NOT NULL,
+  PRIMARY KEY (`director_id`),
+  KEY `movie_id` (`movie_id`),
+  CONSTRAINT `movies_directors_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies_list` (`movie_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `movies_list` (
+  `movie_id` int NOT NULL AUTO_INCREMENT,
+  `movie_name` varchar(100) NOT NULL,
+  `run_time_minutes` int NOT NULL,
+  `age_rating` varchar(10) NOT NULL,
+  PRIMARY KEY (`movie_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `movies_reviews` (
+  `movie_id` int NOT NULL,
+  `rating` decimal(2,1) DEFAULT NULL,
+  KEY `movie_id` (`movie_id`),
+  CONSTRAINT `movies_reviews_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies_list` (`movie_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `movies_roles` (
+  `movie_id` int DEFAULT NULL,
+  `actor_id` int DEFAULT NULL,
+  `role` varchar(100) NOT NULL,
+  KEY `movie_id` (`movie_id`),
+  KEY `actor_id` (`actor_id`),
+  CONSTRAINT `movies_roles_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies_list` (`movie_id`),
+  CONSTRAINT `movies_roles_ibfk_2` FOREIGN KEY (`actor_id`) REFERENCES `movies_actors` (`actor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/* Project Brief
+A person is going to a Star Wars prequel quiz and does not know anything about the characters, create a database
+that lists the characters and some details about their respective films. To support this also query the results in
+order to provide different insights on the topic so we can ather lots of information on the prequels!*/
+ 
+/* Find the run time of each film, order longest to shortest*/
+SELECT
+    movie_name,
+	run_time_minutes
+FROM movies_list
+ORDER BY run_time_minutes DESC;
+
+/* How many different key characters are in each movie*/
+SELECT     
+    l.movie_name,
+    COUNT(r.role) AS count
+FROM movies_list AS l
+INNER JOIN movies_roles AS r     
+    ON l.movie_id = r.movie_id    
+GROUP BY l.movie_name;
+
+/* Which characters have appeared in all three movies*/
+SELECT
+    role,
+	COUNT(role) AS total
+FROM movies_roles
+GROUP BY role
+HAVING COUNT(role) >= 3
+ORDER BY role ASC;
+
+/* The average rating of each film*/
+SELECT     
+    movie_name,
+    AVG(rating)
+FROM movies_list AS l
+INNER JOIN movies_reviews AS r    
+    ON l.movie_id = r.movie_id
+GROUP BY movie_name 
+ORDER BY AVG(rating) DESC;    
+
+/*Male vs female actors and their characters*/
+SELECT
+    gender,
+    role
+FROM movies_actors AS a
+INNER JOIN movies_roles AS r
+    ON a.actor_id = r.actor_id
+GROUP BY role
+ORDER BY gender DESC;
+
+/*Actors and their respective characters and what film they were in*/
+SELECT
+    first_name,
+    last_name,
+    role,
+    movie_name
+FROM movies_actors AS a
+INNER JOIN movies_roles AS r
+    ON a.actor_id = r.actor_id
+INNER JOIN movies_list AS l
+    ON l.movie_id = r.movie_id;
